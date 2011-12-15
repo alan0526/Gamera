@@ -298,17 +298,6 @@ namespace Gamera {
   // TODO: Test this
 
   template<class T>
-  typename T::value_type find_max(const T& image) {
-    if (image.nrows() <= 1 || image.ncols() <= 1)
-      throw std::range_error("Image must have nrows and ncols > 0.");
-    typename T::const_vec_iterator max = image.vec_begin();
-    typename T::value_type value = NumericTraits<typename T::value_type>::min();
-    for (; max != image.vec_end(); ++max)
-      _my_max(*max, value);
-    return value;
-  }
-  
-  template<class T>
   void _my_max(const T& a, T& b) {
     if (a > b)
       b = a;
@@ -321,13 +310,13 @@ namespace Gamera {
   }
 
   template<class T>
-  typename T::value_type find_min(const T& image) {
+  typename T::value_type find_max(const T& image) {
     if (image.nrows() <= 1 || image.ncols() <= 1)
       throw std::range_error("Image must have nrows and ncols > 0.");
-    typename T::const_vec_iterator min = image.vec_begin();
-    typename T::value_type value = NumericTraits<typename T::value_type>::max();
-    for (; min != image.vec_end(); ++min)
-      _my_min(*min, value);
+    typename T::const_vec_iterator max = image.vec_begin();
+    typename T::value_type value = NumericTraits<typename T::value_type>::min();
+    for (; max != image.vec_end(); ++max)
+      _my_max(*max, value);
     return value;
   }
   
@@ -341,6 +330,17 @@ namespace Gamera {
   void _my_min(const ComplexPixel& a, ComplexPixel& b) {
     if (a.real() > b.real())
       b = a;
+  }
+
+  template<class T>
+  typename T::value_type find_min(const T& image) {
+    if (image.nrows() <= 1 || image.ncols() <= 1)
+      throw std::range_error("Image must have nrows and ncols > 0.");
+    typename T::const_vec_iterator min = image.vec_begin();
+    typename T::value_type value = NumericTraits<typename T::value_type>::max();
+    for (; min != image.vec_end(); ++min)
+      _my_min(*min, value);
+    return value;
   }
 
   /*
