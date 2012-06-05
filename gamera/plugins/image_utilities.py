@@ -1,7 +1,7 @@
 #
 #
-# Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, and Karl MacMillan
-#               2008-2010 Christoph Dalitz
+# Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, Karl MacMillan
+#               2008-2012 Christoph Dalitz
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#  
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
@@ -21,12 +21,12 @@
 """The image utilities module contains plugins that do not fit in
 any other category, like image copying or computing histograms."""
 
-from gamera.plugin import * 
+from gamera.plugin import *
 from gamera.gui import has_gui
 from gamera.util import warn_deprecated
 from gamera.args import NoneDefault
 import sys
-import _image_utilities 
+import _image_utilities
 
 class image_copy(PluginFunction):
     """
@@ -62,13 +62,13 @@ class image_save(PluginFunction):
                  Choice("File format", ["TIFF", "PNG"])
                  ])
     def __call__(image, name, format):
-        if format == 0 or format.upper() == "TIFF":
+        if format == 0 or str(format).upper() == "TIFF":
             try:
                 from gamera.plugins import tiff_support
             except ImportError:
                 raise ImportError("Could not load TIFF support.")
             image.save_tiff(name)
-        elif format == 1 or format.upper() == "PNG":
+        elif format == 1 or str(format).upper() == "PNG":
             try:
                 from gamera.plugins import png_support
             except ImportError:
@@ -353,6 +353,49 @@ class ccs_from_labeled_image(PluginFunction):
     return_type = ImageList("ccs")
     author = "Christoph Dalitz and Hasan Yildiz"
 
+class min_max_location(PluginFunction):
+    """Returns the minimum and maximum pixel value and their location
+in an image. When the min/max value occurs at several locations, only the
+location that is closest to the botom right corner is returned.
+
+Only those pixels are examined that are black in the provided *mask*. 
+When no *mask* is given, the entire image is examined. The mask can
+be useful, e.g., to find the lightest and darkest value in the original
+greyscale image belonging to a Cc, as in the following example:
+
+    .. code:: Python
+
+      onebit = grey.to_onebit()
+      ccs = onebit.cc_analysis()
+      # compute min/max of first cc in original greyscale image
+      (pmin, vmin, pmax, vmax) = grey.min_max_location(ccs[0])
+
+The return value is a tuple of the form *(pmin, vmin, pmax, vmax)* where
+*pmin* and *pmax* are the point of the minimum and maximimum, respectively,
+and *vmin* and *vmax* the corresponding pixel values.
+"""
+    category="Analysis"
+    self_type = ImageType([GREYSCALE,GREY16,FLOAT])
+    return_type = Class("min_max_loc")
+    args = Args([ImageType([ONEBIT], name='mask', default=NoneDefault)])
+    author = "Christoph Dalitz"
+    doc_examples = [(GREYSCALE,)]
+    def __call__(self, mask=None):
+        if mask is None:
+            return _image_utilities.min_max_location_nomask(self)
+        else:
+            return _image_utilities.min_max_location(self, mask)
+    __call__ = staticmethod(__call__)
+
+class min_max_location_nomask(PluginFunction):
+    """This is only a helper function for overloading min_max_location.
+It is not needed on the Python side, but only on the C++ side due to
+the plugin wrapping mechanism of Gamera.
+"""
+    category = None
+    self_type = ImageType([GREYSCALE,GREY16,FLOAT])
+    return_type = Class("min_max_loc")
+    author = "Christoph Dalitz"
 
 class UtilModule(PluginModule):
     cpp_headers=["image_utilities.hpp"]
@@ -363,7 +406,8 @@ class UtilModule(PluginModule):
 		 invert, clip_image, mask,
                  nested_list_to_image, to_nested_list,
                  diff_images, mse, reset_onebit_image,
-                 ccs_from_labeled_image]
+                 ccs_from_labeled_image,
+                 min_max_location, min_max_location_nomask]
     author = "Michael Droettboom and Karl MacMillan"
     url = "http://gamera.sourceforge.net/"
 module = UtilModule()

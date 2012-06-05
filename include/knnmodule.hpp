@@ -23,8 +23,8 @@
 #ifndef KWM12172002_knnmodule
 #define KWM12172002_knnmodule
 
-#include "knn.hpp"
 #include <Python.h>
+#include "knn.hpp"
 
 using namespace Gamera;
 using namespace Gamera::kNN;
@@ -100,7 +100,7 @@ inline void compute_distance(DistanceType distance_type, const double* known_buf
     *distance = city_block_distance(known_buf, known_buf + known_len, unknown_buf,
 				    weights);
   } else if (distance_type == FAST_EUCLIDEAN) {
-    *distance = euclidean_distance(known_buf, known_buf + known_len, unknown_buf,
+    *distance = fast_euclidean_distance(known_buf, known_buf + known_len, unknown_buf,
 				   weights);
   } else {
     *distance = euclidean_distance(known_buf, known_buf + known_len, unknown_buf,

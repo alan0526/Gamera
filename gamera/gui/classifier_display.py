@@ -644,11 +644,11 @@ class ClassifierFrame(ImageFrameBase):
          ("Guess all", self._OnGuessAll),
          ("&Guess selected", self._OnGuessSelected),
          (None, None),
-         ("Group and guess all...\tCtrl+A", self._OnGroupAndGuessAll),
-         ("Group &and guess selected...\tCtrl+S", self._OnGroupAndGuessSelected),
+         ("Group and guess all...", self._OnGroupAndGuessAll),
+         ("Group &and guess selected...", self._OnGroupAndGuessSelected),
          (None, None),
-         ("Confirm all\tCtrl+F", self._OnConfirmAll),
-         ("&Confirm selected\tShift+Ctrl+F", self._OnConfirmSelected),
+         ("Confirm all", self._OnConfirmAll),
+         ("&Confirm selected", self._OnConfirmSelected),
          (None, None),
          ("Change set of &features...", self._OnChangeSetOfFeatures)]
       if not aui:

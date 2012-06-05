@@ -58,6 +58,17 @@ inline T norm_weight_avg(T& pix1, T& pix2, double w1=1.0, double w2=1.0)
   return T(((pix1 * w1) + (pix2 * w2))/(w1 + w2));
 }
 
+inline void filterfunc(RGBPixel &p0, RGBPixel &p1, RGBPixel &oldPixel, RGBPixel origPixel, double &weight) {
+  p0 = origPixel;
+  p1 = RGBPixel(  GreyScalePixel(p0.red() * weight),
+		  GreyScalePixel(p0.green() * weight),
+		  GreyScalePixel(p0.blue() * weight));
+  p0 = RGBPixel(  GreyScalePixel(p0.red() - p1.red() + oldPixel.red()),
+		  GreyScalePixel(p0.green() - p1.green() + oldPixel.green()),
+		  GreyScalePixel(p0.blue() - p1.blue() + oldPixel.blue()));
+  oldPixel = p1;
+}
+
 template<class T>
 inline void filterfunc(T &p0, T &p1, T &oldPixel, T origPixel, double & weight)
 {
@@ -104,7 +115,6 @@ inline void borderfunc(T& p0, T& p1, T& oldPixel, T origPixel, double& weight, T
  *
  *    diff: Correction factor for negative shear values.
  */
-
 template<class T, class U>
 void shear_x(const T &orig, U &newbmp, size_t &row, size_t shiftAmount, typename T::value_type bgcolor, double weight, size_t diff=0)
 {
@@ -205,16 +215,6 @@ void shear_y(const T& orig, U& newbmp, size_t &col, size_t shiftAmount, typename
 
 
 
-inline void filterfunc(RGBPixel &p0, RGBPixel &p1, RGBPixel &oldPixel, RGBPixel origPixel, double &weight) {
-  p0 = origPixel;
-  p1 = RGBPixel(  GreyScalePixel(p0.red() * weight),
-		  GreyScalePixel(p0.green() * weight),
-		  GreyScalePixel(p0.blue() * weight));
-  p0 = RGBPixel(  GreyScalePixel(p0.red() - p1.red() + oldPixel.red()),
-		  GreyScalePixel(p0.green() - p1.green() + oldPixel.green()),
-		  GreyScalePixel(p0.blue() - p1.blue() + oldPixel.blue()));
-  oldPixel = p1;
-}
 
 inline double sin2(float per, int n)
 {

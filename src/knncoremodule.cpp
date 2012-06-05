@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2001-2009 Ichiro Fujinaga, Michael Droettboom,
  *                         Karl MacMillan, and Christoph Dalitz
+ *               2012      David Kolanus
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -152,7 +153,16 @@ struct KnnObject {
 
 PyMethodDef knn_methods[] = {
   { (char *)"classify_with_images", knn_classify_with_images, METH_VARARGS,
-    (char *)"classify an unknown image using a list of images." },
+    (char *) "(id_name, confidencemap) **classify_with_images** (ImageList *glyphs*, Image *glyph*, bool cross_validation_mode=False, bool do_confidence=True )\n"
+    "\nClassifies an unknown image using the given list of images as training data.\n"
+    "The *glyph* is classified without setting its classification.  The\n"
+    "return value is a tuple of the form ``(id_name,confidencemap)``, where\n"
+    "*idname* is a list of the form `idname`_, and *confidencemap* is a\n"
+    "map of the form `confidence`_ listing the confidences of the main id.\n"
+    "\n"
+    ".. _idname: #id-name\n\n"
+    ".. _confidence: #confidence"
+  },
   { (char *)"instantiate_from_images", knn_instantiate_from_images, METH_VARARGS,
     (char *)"Use the list of images for non-interactive classification." },
   { (char *)"_distance_from_images", knn_distance_from_images, METH_VARARGS, (char *)"" },
@@ -1262,6 +1272,7 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
 
   if (o->feature_vectors == 0) {
     PyErr_SetString(PyExc_RuntimeError, "knn: serialize called before instatiate from images.");
+    fclose(file);
     return 0;
   }
 
@@ -1269,27 +1280,32 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
   unsigned long version = 1;
   if (fwrite((const void*)&version, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
   unsigned long num_k = (unsigned long)o->num_k;
   if (fwrite((const void*)&num_k, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
   unsigned long num_features = (unsigned long)o->num_features;
   if (fwrite((const void*)&num_features, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
   unsigned long num_feature_vectors = (unsigned long)o->num_feature_vectors;
   if (fwrite((const void*)&num_feature_vectors, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
 
   // write the feature names
   if (fwrite((const void*)&feature_size, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
 
@@ -1298,11 +1314,13 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
     unsigned long string_size = PyString_GET_SIZE(cur_string) + 1;
     if (fwrite((const void*)&string_size, sizeof(unsigned long), 1, file) != 1) {
       PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+      fclose(file);
       return 0;
     }
     if (fwrite((const void*)PyString_AS_STRING(cur_string),
                sizeof(char), string_size, file) != string_size) {
       PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+      fclose(file);
       return 0;
     }
   }
@@ -1311,10 +1329,12 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
     unsigned long len = strlen(o->id_names[i]) + 1; // include \0
     if (fwrite((const void*)&len, sizeof(unsigned long), 1, file) != 1) {
       PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+      fclose(file);
       return 0;
     }
     if (fwrite((const void*)o->id_names[i], sizeof(char), len, file) != len) {
       PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+      fclose(file);
       return 0;
     }
   }
@@ -1322,12 +1342,14 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
   if (fwrite((const void*)o->normalize->get_norm_vector(),
              sizeof(double), o->num_features, file) != o->num_features) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
 
   if (fwrite((const void*)o->weight_vector, sizeof(double), o->num_features, file)
       != o->num_features) {
     PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+    fclose(file);
     return 0;
   }
 
@@ -1337,6 +1359,7 @@ static PyObject* knn_serialize(PyObject* self, PyObject* args) {
     if (fwrite((const void*)cur, sizeof(double), o->num_features, file)
         != o->num_features) {
       PyErr_SetString(PyExc_IOError, "knn: problem writing to a file.");
+      fclose(file);
       return 0;
     }
   }
@@ -1360,26 +1383,32 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
   unsigned long version, num_k, num_features, num_feature_vectors, num_feature_names;
   if (fread((void*)&version, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
   if (version != 1) {
     PyErr_SetString(PyExc_IOError, "knn: unknown version of knn file.");
+    fclose(file);
     return 0;
   }
   if (fread((void*)&num_k, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
   if (fread((void*)&num_features, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
   if (fread((void*)&num_feature_vectors, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
   if (fread((void*)&num_feature_names, sizeof(unsigned long), 1, file) != 1) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
   PyObject* feature_names = PyList_New(num_feature_names);
@@ -1387,11 +1416,13 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
     unsigned long string_size;
     if (fread((void*)&string_size, sizeof(unsigned long), 1, file) != 1) {
       PyErr_SetString(PyExc_RuntimeError, "knn: problem reading file.");
+      fclose(file);
       return 0;
     }
     char tmp_string[1024];
     if (fread((void*)&tmp_string, sizeof(char), string_size, file) != string_size) {
       PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+      fclose(file);
       return 0;
     }
     PyList_SET_ITEM(feature_names, i,
@@ -1400,8 +1431,10 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
 
   knn_delete_feature_data(o);
   set_num_features(o, (size_t)num_features);
-  if (knn_create_feature_data(o, (size_t)num_feature_vectors) < 0)
+  if (knn_create_feature_data(o, (size_t)num_feature_vectors) < 0) {
+    fclose(file);
     return 0;
+  }
   o->num_k = num_k;
 
   std::map<char*, int, ltstr> id_name_histogram;
@@ -1409,11 +1442,13 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
     unsigned long len;
     if (fread((void*)&len, sizeof(unsigned long), 1, file) != 1) {
       PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+      fclose(file);
       return 0;
     }
     o->id_names[i] = new char[len];
     if (fread((void*)o->id_names[i], sizeof(char), len, file) != len) {
       PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+      fclose(file);
       return 0;
     }
     id_name_histogram[o->id_names[i]]++;
@@ -1422,12 +1457,15 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
   double* tmp_norm = new double[o->num_features];
   if (fread((void*)tmp_norm, sizeof(double), o->num_features, file) != o->num_features) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    delete[] tmp_norm;
+    fclose(file);
     return 0;
   }
   o->normalize->set_norm_vector(tmp_norm, tmp_norm + o->num_features);
   delete[] tmp_norm;
   if (fread((void*)o->weight_vector, sizeof(double), o->num_features, file) != o->num_features) {
     PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+    fclose(file);
     return 0;
   }
 
@@ -1435,6 +1473,7 @@ static PyObject* knn_unserialize(PyObject* self, PyObject* args) {
   for (size_t i = 0; i < o->num_feature_vectors; ++i, cur += o->num_features) {
     if (fread((void*)cur, sizeof(double), o->num_features, file) != o->num_features) {
       PyErr_SetString(PyExc_IOError, "knn: problem reading file.");
+      fclose(file);
       return 0;
     }
     o->id_name_histogram[i] = id_name_histogram[o->id_names[i]];
@@ -1505,7 +1544,6 @@ float Fitness(GAGenome & g) {
 
 void Initializer(GAGenome& genome) {
   GA1DArrayGenome<double>& g = (GA1DArrayGenome<double>&)genome;
-  srand(time(0));
   for (int i = 0; i < g.length(); i++) {
     g.gene(i, rand() / (RAND_MAX + 1.0));
   }
@@ -1514,6 +1552,7 @@ void Initializer(GAGenome& genome) {
 static PyObject* knn_ga_create(PyObject* self, PyObject* args) {
   KnnObject* o = (KnnObject*)self;
   o->ga_running = true;
+  srand(time(0));
 
   Py_BEGIN_ALLOW_THREADS
   if (o->ga != 0)

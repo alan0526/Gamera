@@ -3,6 +3,7 @@
  * Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, Karl MacMillan
  *               2010      Christoph Dalitz, Hasan Yildiz, Tobias Bolten
  *               2011      Christian Brandt
+ *               2012      Christoph Dalitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -308,7 +309,7 @@ namespace Gamera {
     if (a.real() > b.real())
       b = a;
   }
-
+  
   template<class T>
   typename T::value_type find_max(const T& image) {
     if (image.nrows() <= 1 || image.ncols() <= 1)
@@ -342,6 +343,7 @@ namespace Gamera {
       _my_min(*min, value);
     return value;
   }
+  
 
   /*
     Fill an image with white.
@@ -794,6 +796,143 @@ namespace Gamera {
 
     return return_ccs;
   }
+
+  /*
+   * find minimum and maximum location and value of maximum within mask
+   * Only black points in the mask are evaluated in image
+   */
+  template<class T, class U>
+  PyObject* min_max_location(const T& image, const U& mask){
+
+    typedef typename T::value_type value_type;
+    int max_x, max_y, min_x, min_y;
+    size_t x,y;
+    value_type max_val, min_val, test_val;
+
+    // find maximum
+    max_x = max_y = min_x = min_y = -1;
+    max_val = black(image);  // lowest possible value
+    min_val = white(image);  // highest possible value
+    for (y = 0; y < mask.nrows(); y++) {
+      for (x = 0; x < mask.ncols(); x++) {
+        if (is_black(mask.get(Point(x,y)))) {
+          test_val = image.get(Point(mask.offset_x()+x,mask.offset_y()+y));
+          if (test_val >= max_val) {
+            max_val = test_val;
+            max_x = mask.offset_x()+x; max_y = mask.offset_y()+y;
+          }
+          if (test_val <= min_val) {
+            min_val = test_val;
+            min_x = mask.offset_x()+x; min_y = mask.offset_y()+y;
+          }
+        }
+      }
+    }
+
+    if (max_x < 0)
+      throw std::runtime_error("min_max_location: mask has no black pixel");
+
+    return Py_BuildValue("NiNi", 
+                         create_PointObject(Point(min_x,min_y)), min_val,
+                         create_PointObject(Point(max_x,max_y)), max_val);
+  }
+  // specialization for FloatImage
+  template<class U>
+  PyObject* min_max_location(const FloatImageView& image, const U& mask){
+
+    int max_x, max_y, min_x, min_y;
+    size_t x,y;
+    FloatPixel max_val, min_val, test_val;
+
+    // find maximum
+    max_x = max_y = min_x = min_y = -1;
+    max_val = std::numeric_limits<FloatPixel>::min();
+    min_val = std::numeric_limits<FloatPixel>::max();
+    for (y = 0; y < mask.nrows(); y++) {
+      for (x = 0; x < mask.ncols(); x++) {
+        if (is_black(mask.get(Point(x,y)))) {
+          test_val = image.get(Point(mask.offset_x()+x,mask.offset_y()+y));
+          if (test_val >= max_val) {
+            max_val = test_val;
+            max_x = mask.offset_x()+x; max_y = mask.offset_y()+y;
+          }
+          if (test_val <= min_val) {
+            min_val = test_val;
+            min_x = mask.offset_x()+x; min_y = mask.offset_y()+y;
+          }
+        }
+      }
+    }
+
+    if (max_x < 0)
+      throw std::runtime_error("min_max_location: mask has no black pixel");
+
+    return Py_BuildValue("NfNf", 
+                         create_PointObject(Point(min_x,min_y)), min_val,
+                         create_PointObject(Point(max_x,max_y)), max_val);
+  }
+
+  template<class T>
+  PyObject* min_max_location_nomask(const T& image) {
+
+    typedef typename T::value_type value_type;
+    int max_x, max_y, min_x, min_y;
+    size_t x,y;
+    value_type max_val, min_val, test_val;
+
+    // find maximum
+    max_x = max_y = min_x = min_y = 0;
+    max_val = black(image);  // lowest possible value
+    min_val = white(image);  // highest possible value
+    for (y = 0; y < image.nrows(); y++) {
+      for (x = 0; x < image.ncols(); x++) {
+        test_val = image.get(Point(x,y));
+        if (test_val >= max_val) {
+          max_val = test_val;
+          max_x = x; max_y = y;
+        }
+        if (test_val <= min_val) {
+          min_val = test_val;
+          min_x = x; min_y = y;
+        }
+      }
+    }
+
+    return Py_BuildValue("NiNi",
+                         create_PointObject(Point(min_x,min_y)), min_val,
+                         create_PointObject(Point(max_x,max_y)), max_val);
+  }
+  // specialization for FloatImage
+  template<class U>
+  PyObject* min_max_location_nomask(const FloatImageView& image, const U& mask){
+
+    int max_x, max_y, min_x, min_y;
+    size_t x,y;
+    FloatPixel max_val, min_val, test_val;
+
+    // find maximum
+    max_x = max_y = min_x = min_y = 0;
+    max_val = std::numeric_limits<FloatPixel>::min();
+    min_val = std::numeric_limits<FloatPixel>::max();
+    for (y = 0; y < image.nrows(); y++) {
+      for (x = 0; x < image.ncols(); x++) {
+        test_val = image.get(Point(x,y));
+        if (test_val >= max_val) {
+          max_val = test_val;
+          max_x = x; max_y = y;
+        }
+        if (test_val <= min_val) {
+          min_val = test_val;
+          min_x = x; min_y = y;
+        }
+      }
+    }
+
+    return Py_BuildValue("NfNf",
+                         create_PointObject(Point(min_x,min_y)), min_val,
+                         create_PointObject(Point(max_x,max_y)), max_val);
+  }
+
 
 }
 #endif

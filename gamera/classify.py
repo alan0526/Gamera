@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, Karl MacMillan
-#               2009-2010 Christoph Dalitz
+#               2009-2012 Christoph Dalitz
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -386,7 +386,7 @@ object)."""
       glyphs = [g for g in self.get_glyphs() 
                 if not g.get_main_id().startswith("_group._part")]
       return gamera_xml.WriteXML(
-         glyphs=glyphs).write_stream(stream, with_features)
+         glyphs=glyphs, with_features=with_features).write_stream(stream)
 
    def to_xml_filename(self, filename, with_features=True):
       """**to_xml_filename** (FileSave *filename*)
@@ -574,7 +574,7 @@ type."""
    # AUTOMATIC CLASSIFICATION
    # (most of this is implemented in the base class, _Classifier)
    def guess_glyph_automatic(self, glyph):
-      """id_name **guess_glyph_automatic** (Image *glyph*)
+      """(id_name, confidencemap) **guess_glyph_automatic** (Image *glyph*)
 
 Classifies the given *glyph* without setting its classification.  The
 return value is a tuple of the form ``(id_name,confidencemap)``, where

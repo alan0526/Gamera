@@ -196,7 +196,7 @@ int tsai_moment_preserving_find_threshold(const T& matrix) {
   int i;
   double criterion;
   double m1, m2, m3;
-  double cd, c0, c1, z0, z1, pd, p0, p1;
+  double cd, c0, c1, z0, z1, pd, p0;
 
   FloatVector* p = histogram(matrix);
 
@@ -219,7 +219,6 @@ int tsai_moment_preserving_find_threshold(const T& matrix) {
 
   pd = z1 - z0;
   p0 = (z1 - m1) / pd;
-  p1 = 1.0 - p0;
 
   /* find threshold */
   for (thresh = 0, criterion = 0.0; thresh < 256; thresh++) {
@@ -255,7 +254,7 @@ Image* tsai_moment_preserving_threshold(const T &m, int storage_format) {
 ________________________________________________________________
 
         bin_ab.c
-        $Id: threshold.hpp 1315 2011-09-19 07:14:56Z cdalitz $
+        $Id: threshold.hpp 1349 2012-06-04 12:05:10Z cdalitz $
         Copyright 1990, Blab, UiO
         Image processing lab, Department of Informatics
         University of Oslo

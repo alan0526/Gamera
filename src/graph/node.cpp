@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "node.hpp"
-#include "graph.hpp"
-#include "edge.hpp"
+#include "graph/node.hpp"
+#include "graph/graph.hpp"
+#include "graph/edge.hpp"
 
 namespace Gamera { namespace GraphApi {
 
@@ -78,7 +78,7 @@ NodePtrEdgeIterator* Node::get_nodes(bool both_directions) {
       from_node = this;
 
    NodePtrEdgeIterator* it = new NodePtrEdgeIterator(_graph, _edges.begin(), 
-         _edges.end(), this);
+         _edges.end(), from_node);
    return it;
 }
 
