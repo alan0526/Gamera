@@ -392,6 +392,18 @@ class shading_subtraction(PluginFunction):
 
     __call__ = staticmethod(__call__)
 
+class brink_threshold(PluginFunction):
+    """
+    Calculates threshold for image with Brink and Pendock's minimum-cross    
+    entropy method and returns corrected image.
+    """
+    author = "Johanna Devaney"
+    self_type = ImageType([GREYSCALE])
+    return_type = ImageType([ONEBIT], "output")
+    def __call__(self):
+        return _binarization.brink_threshold(self)
+    __call__ = staticmethod(__call__)
+
 
 class BinarizationGenerator(PluginModule):
     category = "Binarization"
@@ -406,7 +418,8 @@ class BinarizationGenerator(PluginModule):
                  gatos_background,
                  gatos_threshold,
                  white_rohrer_threshold,
-                 shading_subtraction]
+                 shading_subtraction,
+                 brink_threshold]
     author = "John Ashley Burgoyne and Ichiro Fujinaga"
     url = "http://gamera.sourceforge.net/"
 
