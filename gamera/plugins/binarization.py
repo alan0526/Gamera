@@ -396,8 +396,12 @@ class brink_threshold(PluginFunction):
     """
     Calculates threshold for image with Brink and Pendock's minimum-cross    
     entropy method and returns corrected image.
+
+    Reference: A.D. Brink, N.E. Pendock: Minimum cross-entropy threshold selection.
+    Pattern Recognition 29 (1), 1996. 179-188.
+
     """
-    author = "Johanna Devaney"
+    author = "Johanna Devaney, Brian Stern"
     self_type = ImageType([GREYSCALE])
     return_type = ImageType([ONEBIT], "output")
     def __call__(self):
