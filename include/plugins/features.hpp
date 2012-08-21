@@ -703,32 +703,18 @@ namespace Gamera {
     int mid_x = (*proj_x).size()/2;
     int mid_y = (*proj_y).size()/2;
 
-
-    // for (int i = 0 ; i < (*proj_x).size(); i++) 
-    //   cout << (*proj_x)[i] << endl; 
-    // cout << endl;
+    // Avoid dividing by zero (if there are no points in the middle x point)
+    if ((*proj_y)[mid_y] == 0) {
+      (*proj_y)[mid_y] = 1;
+    }
 
     float relation_xy = (float) (*proj_x)[mid_x] / (float) (*proj_y)[mid_y];
-
-    // cout << "mid_x: " << (*proj_x)[mid_x] << endl;
-    // cout << "mid_y: " << (*proj_y)[mid_y] << endl;
-    // cout << "relation_xy: " << relation_xy << endl;
-
-
-    *buf = relation_xy;
-
-
+    *buf = feature_t(relation_xy);
 
     delete proj_x;
     delete proj_y;
-
     delete rotated_image;
-
   }
-
-
-
-
 
 }
 #endif

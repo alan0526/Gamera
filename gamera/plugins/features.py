@@ -319,6 +319,11 @@ class top_bottom(Feature):
 
 class diagonal_projection(Feature):
     """
+    Feature based on the diagonal projections ratio of an image. 
+    It first rotates an image in 45 degrees, then calculates
+    horizontal and vertical projections. Finally, the ratio of
+    the mid points for each projections is calculated. 
+    This feature is capable to express the skewness of a glyph. 
 
     +---------------------------+
     | **Invariant to:**         |  
@@ -329,7 +334,6 @@ class diagonal_projection(Feature):
     +-------+----------+--------+
     """
     return_type = FloatVector(length=1)
-    # pass
 
 class generate_features(PluginFunction):
     """
