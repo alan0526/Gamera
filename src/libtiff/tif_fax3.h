@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.h 158 2002-11-24 01:49:40Z karlmac $ */
+/* $Id$ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler

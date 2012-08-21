@@ -9,6 +9,6 @@ that you are using.
 #ifndef _ga_version_h_
 #define _ga_version_h_
 
-//static char *rcsid = "$Date: 2002-11-22 17:16:24 -0500 (Fri, 22 Nov 2002) $ $Revision: 157 $";
+//static char *rcsid = "$Date$ $Revision$";
 
 #endif

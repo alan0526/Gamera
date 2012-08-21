@@ -254,7 +254,7 @@ Image* tsai_moment_preserving_threshold(const T &m, int storage_format) {
 ________________________________________________________________
 
         bin_ab.c
-        $Id: threshold.hpp 1349 2012-06-04 12:05:10Z cdalitz $
+        $Id$
         Copyright 1990, Blab, UiO
         Image processing lab, Department of Informatics
         University of Oslo

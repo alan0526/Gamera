@@ -9,7 +9,7 @@
  * of two increase in speed on a Power PC G4 (PPC7455) using gcc -O3.
  */
 
-/* @(#) $Id: crc32.c 921 2005-09-27 14:12:37Z mdboom $ */
+/* @(#) $Id$ */
 
 #ifdef MAKECRCH
 #  include <stdio.h>

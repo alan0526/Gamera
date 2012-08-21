@@ -548,7 +548,7 @@ namespace Gamera {
             min_x = points->at(i).x();
             min_y = points->at(i).y();
             min_i = i;
-        } else if (points->at(i).x() < min_x && points->at(i).y() < min_y) {
+        } else if (points->at(i).x() == min_x && points->at(i).y() < min_y) {
             min_x = points->at(i).x();
             min_y = points->at(i).y();
             min_i = i;
@@ -584,7 +584,7 @@ namespace Gamera {
      std::map<double, Point>::iterator pointIt;
      pointIt = stack_polarangle.begin();
 
-     retVector->push_back(origin); 			// push point[0]
+     retVector->push_back(origin); 	        // push point[0]
 
      retVector->push_back(pointIt->second); // push point[1]
      pointIt++;
@@ -615,15 +615,18 @@ namespace Gamera {
     FloatVector *right = contour_right(src);
     FloatVector::iterator it;
     size_t y;
+    std::set<Point> pointset;
 
     for(it = left->begin(), y=0; it != left->end() ; it++, y++) {
       if( *it != std::numeric_limits<double>::infinity() ) {
-        contour_points->push_back(Point((int)*it,y));
+        contour_points->push_back(Point((coord_t)*it,y));
+        pointset.insert(Point((coord_t)*it,y));
       }
     }
     for(it = right->begin(), y=0; it != right->end() ; it++, y++) {
       if( *it != std::numeric_limits<double>::infinity() ) {
-        contour_points->push_back(Point((int)src.ncols()-*it,y));
+        if(pointset.count(Point((coord_t)src.ncols()-*it,y))==0)
+          contour_points->push_back(Point((coord_t)src.ncols()-*it,y));
       }
     }
     PointVector *output = convex_hull_from_points(contour_points);

@@ -1,6 +1,7 @@
 /*
  *
- * Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, and Karl MacMillan
+ * Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom, Karl MacMillan
+ *               2012      Christoph Dalitz
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -78,7 +79,7 @@ namespace Gamera {
       m_y = y;
     }
     
-    /// Move this point the the coordinates x and y
+    /// Move this point by the coordinates x and y (i.e. add (x,y))
     void move(int x, int y) {
       m_x += x;
       m_y += y;
@@ -93,6 +94,25 @@ namespace Gamera {
     bool operator!=(const Point& x) const {
       return (m_x != x.m_x || m_y != x.m_y);
     }
+
+    /// Less Than operator
+    /// (this does not make real sense, but allows Points to be keys in Maps)
+    bool operator<(const Point& x) const {
+      if (m_x < x.m_x)  return true;
+      if (m_y < x.m_y) return true;
+      return false;
+    }
+
+    /// Addition
+    const Point operator+(const Point& p) const {
+      return Point(m_x + p.m_x, m_y + p.m_y);
+    }
+    Point operator+=(const Point& p) {
+      m_x += p.m_x;
+      m_y += p.m_y;
+      return *this;
+    }
+
   };
 
   /*
